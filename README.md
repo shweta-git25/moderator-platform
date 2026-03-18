@@ -59,4 +59,4 @@ To exit Query Editor: q
 - Writing basic unit test cases in Postman
 
 ## Documentation: 
-[📘 The Moderator Platform PDF](../moderation-platform/The_Moderator_Platform.pdf)
+[📘 The Moderator Platform PDF](./The_Moderator_Platform.pdf)
