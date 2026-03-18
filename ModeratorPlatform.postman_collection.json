@@ -1,0 +1,497 @@
+{
+	"info": {
+		"_postman_id": "60349ab9-c6a0-49a1-82b5-b8ff03fc8ce9",
+		"name": "ModeratorPlatform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33335711"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json();\r",
+							"pm.environment.set(\"token\", response.data.access_token);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"moderator_name\": \"user000\",\r\n    \"moderator_region_id\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/login",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"login"
+					]
+				},
+				"description": "**Login API**\n\nThis is a **POST API** used for user login. The request body must include the following two parameters:\n\n``` json\n{\n  \"moderator_name\": \"user002\",\n  \"moderator_region_id\": 2\n}\n\n ```\n\n**Parameters**\n\n- `moderator_name` _(string)_ – The name/identifier of the moderator.\n    \n- `moderator_region_id` _(integer)_ – The region ID associated with the moderator.\n    \n\n**Response**\n\nUpon successful authentication, the API returns an **access token**. This token must be included in subsequent API requests to authenticate and authorize the user."
+			},
+			"response": []
+		},
+		{
+			"name": "All Events",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let response = pm.response.json();\r",
+							"\r",
+							"/* Check response schema */\r",
+							"pm.test(\"Response has required fields\", function () {\r",
+							"    pm.expect(response).to.have.property(\"success\");\r",
+							"    pm.expect(response).to.have.property(\"message\");\r",
+							"    pm.expect(response).to.have.property(\"data\");\r",
+							"    pm.expect(response).to.have.property(\"pagination\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"/* CASE 1: No events found (data = null) */\r",
+							"\r",
+							"if (response.data === null) {\r",
+							"\r",
+							"    pm.test(\"Success flag should be false when no data\", function () {\r",
+							"        pm.expect(response.success).to.eql(false);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Pagination should be null\", function () {\r",
+							"        pm.expect(response.pagination).to.eql(null);\r",
+							"    });\r",
+							"\r",
+							"}\r",
+							"\r",
+							"\r",
+							"/* CASE 2: Events exist */\r",
+							"\r",
+							"else {\r",
+							"\r",
+							"    pm.test(\"Success flag should be true when events exist\", function () {\r",
+							"        pm.expect(response.success).to.eql(true);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Data should be an array\", function () {\r",
+							"        pm.expect(response.data).to.be.an(\"array\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Event object structure is valid\", function () {\r",
+							"\r",
+							"        let event = response.data[0];\r",
+							"\r",
+							"        pm.expect(event).to.have.property(\"event_id\");\r",
+							"        pm.expect(event).to.have.property(\"category_name\");\r",
+							"        pm.expect(event).to.have.property(\"event_title\");\r",
+							"        pm.expect(event).to.have.property(\"event_description\");\r",
+							"        pm.expect(event).to.have.property(\"claimed_status\");\r",
+							"\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"All events should be unclaimed\", function () {\r",
+							"\r",
+							"        response.data.forEach(event => {\r",
+							"            pm.expect(event.claimed_status).to.eql(0);\r",
+							"        });\r",
+							"\r",
+							"    });\r",
+							"\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/events/1?page=1",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"events",
+						"1"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						}
+					]
+				},
+				"description": "**Get All Events API**\n\nThis is a **GET API** used to retrieve all events for a specific region.\n\n**Endpoint**\n\n```\n{{moderator_api_url}}/events/{region_id}\n\n ```\n\n**Path Parameter**\n\n- `region_id` _(integer)_ – The ID of the region for which events need to be retrieved.\n    \n\n**Query Parameter**\n\n- `page` _(optional, integer)_ – Used for pagination to retrieve events page by page.\n    \n\n**Response**\n\nThe API returns a list of events associated with the specified region. Each event object contains the following details:\n\n- `event_id` – Unique identifier of the event\n    \n- `category` – The category to which the event belongs\n    \n- `event_title` – Title of the event\n    \n- `event_description` – Description of the event\n    \n- `claimed_status` – Indicates the claim status of the event\n    \n    - `0` → Event is **not claimed**\n        \n    - `1` → Event is **locked and claimed**"
+			},
+			"response": []
+		},
+		{
+			"name": "Claim Event",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json();\r",
+							"\r",
+							"/* Basic response validation */\r",
+							"\r",
+							"pm.test(\"Response has success field\", function () {\r",
+							"    pm.expect(response).to.have.property(\"success\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has message field\", function () {\r",
+							"    pm.expect(response).to.have.property(\"message\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"/* CASE 1: BODY MISSING */\r",
+							"\r",
+							"if (response.message === \"body is required\") {\r",
+							"\r",
+							"    pm.test(\"Status code should be 400\", function () {\r",
+							"        pm.response.to.have.status(400);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Success flag should be false\", function () {\r",
+							"        pm.expect(response.success).to.eql(false);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Data should be null\", function () {\r",
+							"        pm.expect(response.data).to.eql(null);\r",
+							"    });\r",
+							"\r",
+							"}\r",
+							"\r",
+							"\r",
+							"/* CASE 2: INVALID EVENT */\r",
+							"\r",
+							"else if (response.message === \"No such event exists\") {\r",
+							"\r",
+							"    pm.test(\"Status code should be 200\", function () {\r",
+							"        pm.response.to.have.status(200);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Success flag should be false\", function () {\r",
+							"        pm.expect(response.success).to.eql(false);\r",
+							"    });\r",
+							"\r",
+							"\r",
+							"}\r",
+							"\r",
+							"\r",
+							"/* CASE 3: ALREADY CLAIMED EVENT */\r",
+							"\r",
+							"else if (response.message === \"Event already claimed.\") {\r",
+							"\r",
+							"    pm.test(\"Status code should be 200\", function () {\r",
+							"        pm.response.to.have.status(200);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Success flag should be false\", function () {\r",
+							"        pm.expect(response.success).to.eql(false);\r",
+							"    });\r",
+							"\r",
+							"\r",
+							"}\r",
+							"\r",
+							"/* CASE 4: SUCCESSFUL CLAIM */\r",
+							"\r",
+							"else if (response.success === true && response.data !== null) {\r",
+							"\r",
+							"    pm.test(\"Status code should be 200\", function () {\r",
+							"        pm.response.to.have.status(200);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Correct success message returned\", function () {\r",
+							"        pm.expect(response.message).to.eql(\"Event successfully claimed\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Response contains event data\", function () {\r",
+							"\r",
+							"        pm.expect(response.data).to.have.property(\"event_id\");\r",
+							"        pm.expect(response.data).to.have.property(\"expire_time\");\r",
+							"        pm.expect(response.data).to.have.property(\"event_title\");\r",
+							"        pm.expect(response.data).to.have.property(\"event_description\");\r",
+							"\r",
+							"    });\r",
+							"\r",
+							"    /* Save event id for acknowledge API */\r",
+							"\r",
+							"    pm.environment.set(\"event_id\", response.data.event_id);\r",
+							"\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"event_id\":104,\r\n    \"region_id\": 1,\r\n    \"moderator_id\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/claim",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"claim"
+					]
+				},
+				"description": "**Claim Event API**\n\nThis is a **POST API** used to claim an event for a specific moderator within a region. The request requires **token-based authorization**.\n\n**Authorization**\n\n- The request must include a valid **access token** in the authorization header to authenticate the moderator.\n    \n\n**Request Parameters**\n\n- `event_id` _(integer)_ – The unique identifier of the event to be claimed.\n    \n- `region_id` _(integer)_ – The region ID where the event belongs.\n    \n- `moderator_id` _(integer)_ – The ID of the moderator claiming the event.\n    \n\n**Functionality**\n\nWhen a moderator claims an event:\n\n- The `claimed_status` of the event is updated to **1**, indicating that the event has been **locked and claimed**.\n    \n- An **expiry date** is created and stored in the **assignment table** for that event.\n    \n- The **expiry date** is also returned in the API response.\n    \n\n**Response**\n\n- On successful claim, the API returns the **event details along with the expiry date**.\n    \n- If the event has already been claimed, the API returns the following message:\n    \n\n`Event already claimed`"
+			},
+			"response": []
+		},
+		{
+			"name": "Acknowledge Event",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"event_id\": 104,\r\n    \"moderator_id\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/acknowledge",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"acknowledge"
+					]
+				},
+				"description": "**Acknowledge Event API**\n\nThis is a **POST API** used by a moderator to acknowledge an event.\n\n**Query Parameters**\n\n- `event_id` _(integer)_ – The unique identifier of the event to be acknowledged.\n    \n- `moderator_id` _(integer)_ – The ID of the moderator acknowledging the event.\n    \n\n**Functionality**\n\nOnce the event is acknowledged:\n\n- The **acknowledge status** is updated to **1**, indicating that the event has been acknowledged.\n    \n- The **acknowledgement timestamp** is recorded and updated in the system.\n    \n\n**Response**\n\nUpon successful acknowledgement, the API returns the following message:\n\n`Event acknowledged`"
+			},
+			"response": []
+		},
+		{
+			"name": "Expire Event",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"event_id\": 52,\r\n    \"moderator_id\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/expire",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"expire"
+					]
+				},
+				"description": "**Acknowledge Event API**\n\nThis is a **POST API** used by a moderator to acknowledge an event.\n\n**Query Parameters**\n\n- `event_id` _(integer)_ – The unique identifier of the event to be acknowledged.\n    \n- `moderator_id` _(integer)_ – The ID of the moderator acknowledging the event.\n    \n\n**Functionality**\n\nOnce the event is acknowledged:\n\n- The **acknowledge status** is updated to **1**, indicating that the event has been acknowledged.\n    \n- The **acknowledgement timestamp** is recorded and updated in the system.\n    \n\n**Response**\n\nUpon successful acknowledgement, the API returns the following message:\n\n`Event acknowledged`"
+			},
+			"response": []
+		},
+		{
+			"name": "Pending Claim Events",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{moderator_api_url}}/ack-pending-events/1",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"ack-pending-events",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Event Metrics",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{moderator_api_url}}/event-metrics?region_id=1&moderator_id=1",
+					"host": [
+						"{{moderator_api_url}}"
+					],
+					"path": [
+						"event-metrics"
+					],
+					"query": [
+						{
+							"key": "region_id",
+							"value": "1"
+						},
+						{
+							"key": "moderator_id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
