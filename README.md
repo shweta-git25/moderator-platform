@@ -44,6 +44,7 @@ Please create the below environment variables in the Postman.
 To run the docker - Postegres SQL Editor:
 
 Command: docker exec -it moderator_postgres psql -U postgres -d moderator_db
+
 To exit Query Editor: q
 
 ## Implemented Requirements:
